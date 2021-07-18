@@ -1,7 +1,7 @@
 # [Arcade: Universal Cosmic](https://www.arcade-museum.com/game_detail.php?game_id=7398) games (Z80-based) for [MiSTer](https://github.com/MiSTer-devel/Main_MiSTer/wiki)
 
 By [Mike Coates](https://github.com/macrofpga)  
-Current Version - 0.9 - 2021-07-08
+Current Version - 0.9 - 08/07/2021
 
 ## Description
 
@@ -23,7 +23,7 @@ Up, Down, Left, Right, Fire 1, Fire 2 (not all games use all buttons)
 
 Sound effects are all implemented using samples (other than the DAC).
 
-I have added a screen flip option which is not present on all parts of the original video hardware, sprites are instead flipped by software. 
+I have added a screen flip option which is not present on all parts of the original video hardware, sprites are instead flipped by software.
 
 The coinage DIP switch on Magic Spot is wrong!
 
@@ -37,8 +37,7 @@ Devil Zone and No Man's Land need sound samples sourced and connected up.
 
 **ROMs are not included!** In order to use this arcade core, you will need to provide the correct ROM file yourself.
 
-To simplify the process .mra files are provided in the releases folder, that specify the required ROMs with their checksums. The ROMs .zip filename refers to the
-corresponding file from the MAME project.
+To simplify the process `.mra` files are provided in the releases folder, that specify the required ROMs with their checksums. The ROMs `.zip` filename refers to the corresponding file from the MAME project.
 
 Please refer to https://github.com/MiSTer-devel/Main_MiSTer/wiki/Arcade-Roms for information on how to setup and use the environment.
 
