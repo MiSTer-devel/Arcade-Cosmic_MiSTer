@@ -190,7 +190,7 @@ assign VGA_SCALER = 0;
 assign HDMI_FREEZE = 0;
 assign FB_FORCE_BLANK = 0;
 
-assign LED_USER  = btn_start1 || ioctl_download;
+assign LED_USER  = ioctl_download;
 assign LED_DISK  = 0;
 assign LED_POWER = 0;
 
@@ -220,29 +220,45 @@ localparam CONF_STR = {
 
 ////////////////////   CLOCKS   ///////////////////
 
-reg  [1:0] clk_div = 2'd0;
 wire pll_locked;
-
-wire clk_43,clk_10;
-
-wire clk_vid = clk_43;
-wire clk_sys = clk_10;
-wire pix_clk = clk_div[0];		// Pixel clock = 5.408 Mhz
-wire clk_cpu1 = clk_div[1];   // CPU Clock = 2.7Mhz (at the moment ...)
+wire clk_vid;
+wire clk_sys;
 
 pll pll
 (
 	.refclk(CLK_50M),
 	.rst(0),
-	.outclk_0(clk_43),			// 43.264 Mhz
-	.outclk_1(clk_10), 			// 10.816 Mhz
+	.outclk_0(clk_vid),			// 43.264 Mhz
+	.outclk_1(clk_sys), 			// 10.816 Mhz
 	.locked(pll_locked)
 );
 
+
+wire pix_clk = clk_div[0];		// Pixel clock = 5.408 Mhz
+
+reg  [1:0] clk_div = 2'd0;		// Clock divider (for Pixel and CPU speed 2.7Mhz)
+reg  [2:0] clk_div2 = 3'd0;	// Clock divider (for CPU speed 1.8 Mhz)
+reg cpu_ena_27;					// 2.7 Mhz
+reg cpu_ena_18;					// 1.8 Mhz
+
+
 // Divider for other clocks (7474 and 74161 on PCB)
-always @(posedge clk_10) begin
+always @(posedge clk_sys) begin
+	cpu_ena_27 <= 1'd0;
+	cpu_ena_18 <= 1'd0;
+	
 	clk_div <= clk_div + 1'b1;
+	clk_div2 <= clk_div2 + 1'b1;
+	
+	// cpu clocks
+	if (clk_div == 3) cpu_ena_27 <= 1'd1;
+	
+	if (clk_div2 == 5) begin
+		cpu_ena_18 <= 1'd1;
+		clk_div2 <= 3'd0;
+	end		
 end
+
 
 ///////////////////////////////////////////////////
 
@@ -290,17 +306,19 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 );
 
 // Game ID from MRA file
+
 reg [7:0] GameMod = 255;
 always @(posedge clk_sys) if (ioctl_wr & (ioctl_index==1)) GameMod <= ioctl_dout;
 
-// 01 = Space Panic - 1.8Mhz
-// 02 = Magic Spot  - 2.7Mhz
-// 03 = Cosmic Alien - 2.7Mhz ?
-// 04 = Devil Zone
-// 05 = No Mans Land
+// Game ID - CPU Speed
+// 01 = Space Panic - 1.8 Mhz
+// 02 = Magic Spot  - 2.7 Mhz
+// 03 = Cosmic Alien - 1.8 Mhz
+// 04 = Devil Zone - 2.7 Mhz
+// 05 = No Mans Land - 1.8Mhz
 
-//wire cpu_clk = (GameMod==1)? clk_cpu2 : clk_cpu1;
-wire cpu_clk = clk_cpu1;
+wire cpu_ena = (GameMod==2 || GameMod==4) ? cpu_ena_27 : cpu_ena_18;
+
 
 // Dip switches from MRA file
 reg [7:0] sw[8];
@@ -476,7 +494,7 @@ COSMIC COSMIC
 	
 	.RESET(Myreset),
 	.PIX_CLK(pix_clk),
-	.CPU_CLK(cpu_clk),
+	.CPU_ENA(cpu_ena),
 	.CLK(clk_sys),
 	.GAME(GameMod)
 );

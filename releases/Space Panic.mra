@@ -6,6 +6,7 @@
 	<manufacturer>Universal</manufacturer>
 	<category>Platform</category>
 	<rbf>cosmic</rbf>
+	<buttons names="Dig,Fill,Start 1P,Start 2P,Coin" default="A,B,Start,Select,R"/>
 	<switches default="00,00,00">
 		<dip bits="0,1,2" name="Coinage"     ids="1C-1C,1C-2C,1C-3C,1C-4C,2C-3C,NA,NA"/>
 		<dip bits="3"     name="Cabinet"     ids="Upright,Cocktail"/>

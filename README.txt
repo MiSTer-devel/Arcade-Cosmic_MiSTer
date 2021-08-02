@@ -20,15 +20,9 @@ Known differences / problems
 
 Sound effects are all implemented using samples (other than the DAC)
 
-I have added a screen flip option which is not present on all parts of the 
-original video hardware, sprites are instead flipped by software. 
-
-coinage dip on Magic Spot is wrong!
-
-The CPU is running at the wrong frequency for a couple of the games, but this 
-does not affect the game (other than the DAC sounds wil be higher frequency)
-This will be fixed at some point. (by converting it to a CPU Enable signal and 
-adding a second divider)
+I have added a screen flip option to the sprite code, sprites are flipped by the 
+software on the real hardware, but everything else does have a flip signal. It is 
+implemented as a fake dip switch.
 
 No mans land needs the background video lined up properly in all flip modes.
 

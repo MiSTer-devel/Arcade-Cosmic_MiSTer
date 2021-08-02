@@ -42,7 +42,7 @@ port
 	--
 	RESET      : in  std_logic;
 	PIX_CLK    : in  std_logic;
-	CPU_CLK    : in  std_logic;
+	CPU_ENA    : in  std_logic;
 	CLK        : in  std_logic;
 	GAME       : in  std_logic_vector(7 downto 0)
 );
@@ -267,7 +267,8 @@ begin
 	cpu : entity work.T80as
 	port map (
 		RESET_n       => Global_Reset,
-		CLK_n         => CPU_CLK,
+		CLK_n         => CLK,
+		CEN           => CPU_ENA,
 		WAIT_n        => '1',
 		INT_n         => cpu_int_l,
 		NMI_n         => cpu_nmi_l,
@@ -443,11 +444,11 @@ end process;
 
 -- Memory mapped registers
 --
-MMR_Write : process (CPU_CLK)
+MMR_Write : process (CLK)
 variable address : natural range 0 to 2**15 - 1;
 begin
-	if rising_edge(CPU_CLK) then
-		if mmr_wr='1' then
+	if rising_edge(CLK) then
+		if (CPU_ENA='1' and mmr_wr='1') then
 
 			address := to_integer(unsigned(cpu_addr));
 
@@ -463,11 +464,11 @@ begin
 	end if;
 end process;
 
-MMR_read : process (CPU_CLK)
+MMR_read : process (CLK)
 variable address : natural range 0 to 2**15 - 1;
 begin
-	if rising_edge(CPU_CLK) then
-		if mmr_rd='1' then
+	if rising_edge(CLK) then
+		if (CPU_ENA='1' and mmr_rd='1') then
 
 			address := to_integer(unsigned(cpu_addr));
 
@@ -478,10 +479,10 @@ begin
 				when 16#6802# | 16#5002# => reg_data <= dipsw1;
 				when 16#6803# | 16#5003# => reg_data <= in2;
 				-- Magical Spot only
-				when 16#3800#            => reg_data <= "0000000" & dipsw2(0);
-				when 16#3801#            => reg_data <= "0000000" & dipsw2(1);
-				when 16#3802#            => reg_data <= "0000000" & dipsw2(2);
-				when 16#3803#            => reg_data <= "0000000" & dipsw2(3);
+				when 16#3800#            => reg_data <= "0000000" & dipsw2(3);
+				when 16#3801#            => reg_data <= "0000000" & dipsw2(2);
+				when 16#3802#            => reg_data <= "0000000" & dipsw2(1);
+				when 16#3803#            => reg_data <= "0000000" & dipsw2(0);
 				when others => null;
 			end case;
 			
@@ -491,116 +492,118 @@ end process;
 
 -- Sound is memory mapped, but handled seperately
 --
-Sound_Write : process (CPU_CLK)
+Sound_Write : process (CLK)
 variable address : natural range 0 to 2**15 - 1;
 variable SoundBit : std_logic;
 begin
-	if rising_edge(CPU_CLK) then
-		if reset='1' then
-			O_SoundPort <= "0000000000000000";
-			O_AUDIO     <= "0000000000000000";
-			O_SoundStop <= "1111111111111111";
-			Sound_EN    <= '0';
-			Bomb_Select <= "000";
-		else
-			O_SoundStop <= "0000000000000000";
+	if rising_edge(CLK) then
+		if CPU_ENA='1' then
+			if reset='1' then
+				O_SoundPort <= "0000000000000000";
+				O_AUDIO     <= "0000000000000000";
+				O_SoundStop <= "1111111111111111";
+				Sound_EN    <= '0';
+				Bomb_Select <= "000";
+			else
+				O_SoundStop <= "0000000000000000";
 
-			-- Coin sample triggered by coin mech (Space Panic & Magic Spot)
-			if GAME /= 3 then
-				O_SoundPort(0) <= coin;
-			end if;
-			
-			if snd_wr='1' then
+				-- Coin sample triggered by coin mech (Space Panic & Magic Spot)
+				if GAME /= 3 then
+					O_SoundPort(0) <= coin;
+				end if;
+				
+				if snd_wr='1' then
 
-				address := to_integer(unsigned(cpu_addr));
-				SoundBit := cpu_data_out(7) and Sound_EN; -- used for all except sound enable
+					address := to_integer(unsigned(cpu_addr));
+					SoundBit := cpu_data_out(7) and Sound_EN; -- used for all except sound enable
 
-				if (GAME = 1) then
-					-- Space Panic sound registers
-					case address is
-						when 16#7000# => O_SoundPort(10) <= SoundBit;
-						when 16#7001# => O_SoundPort(2) <= SoundBit;
-						when 16#7002# => O_SoundPort(6) <= SoundBit;
-						when 16#7003# => O_SoundPort(7) <= SoundBit;
-						when 16#7005# => O_SoundPort(2) <= SoundBit;
-						when 16#7006# => O_SoundPort(8) <= SoundBit;
-						when 16#7007# => O_SoundPort(4) <= SoundBit;
-						when 16#7008# => O_SoundPort(9) <= SoundBit;
-						when 16#7009# => O_SoundPort(5) <= SoundBit;
-						when 16#700A# => O_AUDIO <= "00" & SoundBit & "0000000000000"; -- 1 bit DAC
-						when 16#700B# => Sound_EN <= cpu_data_out(7);
-											  if (cpu_data_out(7)='0') then
-													-- Stop all sounds as well
-												   O_SoundPort <= "0000000000000000";
-													O_AUDIO     <= "0000000000000000";
-													O_SoundStop <= "1111111111111110";
-											  end if;
-						when 16#7800# => O_SoundPort(1) <= SoundBit;
-						when 16#7801# => O_SoundPort(3) <= SoundBit;
-						when others => null;
-					end case;
-				elsif (GAME = 2 or GAME = 4 or GAME = 5) then
-					-- Magic Spot sound registers
-					case address is
-						when 16#4800# => O_AUDIO <= "00" & cpu_data_out(7) & "0000000000000"; -- 1 bit DAC
-						when 16#4801# => O_SoundPort(1) <= SoundBit;
-						when 16#4802# => O_SoundPort(3) <= SoundBit;
-						when 16#4803# => O_SoundPort(6) <= SoundBit;
-						when 16#4804# => O_SoundPort(2) <= SoundBit;
-						when 16#4805# => O_SoundPort(5) <= SoundBit;
-						when 16#4806# => O_SoundPort(7) <= SoundBit;
-						--when 16#4808# => O_SoundPort(8) <= SoundBit; -- Ultramoth?
-						when 16#4809# => O_SoundPort(8) <= SoundBit; -- Ultramoth?
-						when 16#480A# => O_SoundPort(4) <= SoundBit;
-						when 16#480B# => Sound_EN <= cpu_data_out(7);
-											  if (cpu_data_out(7)='0' and Sound_EN='1') then
-													-- Stop all sounds as well if turning off
-												   O_SoundPort <= "0000000000000000";
-													O_AUDIO     <= "0000000000000000";
-													O_SoundStop <= "1111111111111110";
-											  end if;
-						-- sort rest
-						when others => null;
-					end case;
-				elsif (GAME = 3) then
-					-- Cosmic Alien
-					case address is
-						when 16#7000# => O_SoundPort(2) <= SoundBit;
-						when 16#7002# => 
-							case Bomb_Select is
-								when "010" => O_SoundStop(3) <= SoundBit;
-								              O_SoundPort(3) <= SoundBit;
-								when "011" => O_SoundStop(4) <= SoundBit;
-								              O_SoundPort(4) <= SoundBit;
-								when "100" => O_SoundStop(5) <= SoundBit;
-								              O_SoundPort(5) <= SoundBit;
-								when "101" => O_SoundStop(6) <= SoundBit;
-								              O_SoundPort(6) <= SoundBit;
-								when "110" => O_SoundStop(7) <= SoundBit;
-								              O_SoundPort(7) <= SoundBit;
-								when "111" => O_SoundStop(8) <= SoundBit;
-								              O_SoundPort(8) <= SoundBit;
-								when others => null;
-							end case;
-						when 16#7003# => Bomb_Select(2) <= cpu_data_out(7);
-						when 16#7004# => Bomb_Select(1) <= cpu_data_out(7);
-						when 16#7005# => Bomb_Select(0) <= cpu_data_out(7);
-						when 16#7006# => O_SoundPort(10) <= SoundBit;
-						when 16#7007# => O_SoundPort(11) <= SoundBit; -- swopped, was 12,11
-						when 16#7008# => O_SoundPort(12) <= SoundBit;
-						when 16#7009# => O_SoundPort(9) <= SoundBit;
-						when 16#700B# => Sound_EN <= cpu_data_out(7);
-											  if (cpu_data_out(7)='1') then
-													-- Start background noise
-													O_SoundPort(1) <= '1';
-											  elsif Sound_EN='1' then
-													-- Stop all sounds as well if turning off
-												   O_SoundPort <= "0000000000000000";
-													O_AUDIO     <= "0000000000000000";
-													O_SoundStop <= "1111111111111110";
-											  end if;					
-						when others => null;
-					end case;
+					if (GAME = 1) then
+						-- Space Panic sound registers
+						case address is
+							when 16#7000# => O_SoundPort(10) <= SoundBit;
+							when 16#7001# => O_SoundPort(2) <= SoundBit;
+							when 16#7002# => O_SoundPort(6) <= SoundBit;
+							when 16#7003# => O_SoundPort(7) <= SoundBit;
+							when 16#7005# => O_SoundPort(2) <= SoundBit;
+							when 16#7006# => O_SoundPort(8) <= SoundBit;
+							when 16#7007# => O_SoundPort(4) <= SoundBit;
+							when 16#7008# => O_SoundPort(9) <= SoundBit;
+							when 16#7009# => O_SoundPort(5) <= SoundBit;
+							when 16#700A# => O_AUDIO <= "00" & SoundBit & "0000000000000"; -- 1 bit DAC
+							when 16#700B# => Sound_EN <= cpu_data_out(7);
+												  if (cpu_data_out(7)='0') then
+														-- Stop all sounds as well
+														O_SoundPort <= "0000000000000000";
+														O_AUDIO     <= "0000000000000000";
+														O_SoundStop <= "1111111111111110";
+												  end if;
+							when 16#7800# => O_SoundPort(1) <= SoundBit;
+							when 16#7801# => O_SoundPort(3) <= SoundBit;
+							when others => null;
+						end case;
+					elsif (GAME = 2 or GAME = 4 or GAME = 5) then
+						-- Magic Spot sound registers
+						case address is
+							when 16#4800# => O_AUDIO <= "00" & cpu_data_out(7) & "0000000000000"; -- 1 bit DAC
+							when 16#4801# => O_SoundPort(1) <= SoundBit;
+							when 16#4802# => O_SoundPort(3) <= SoundBit;
+							when 16#4803# => O_SoundPort(6) <= SoundBit;
+							when 16#4804# => O_SoundPort(2) <= SoundBit;
+							when 16#4805# => O_SoundPort(5) <= SoundBit;
+							when 16#4806# => O_SoundPort(7) <= SoundBit;
+							--when 16#4808# => O_SoundPort(8) <= SoundBit; -- Ultramoth?
+							when 16#4809# => O_SoundPort(8) <= SoundBit; -- Ultramoth?
+							when 16#480A# => O_SoundPort(4) <= SoundBit;
+							when 16#480B# => Sound_EN <= cpu_data_out(7);
+												  if (cpu_data_out(7)='0' and Sound_EN='1') then
+														-- Stop all sounds as well if turning off
+														O_SoundPort <= "0000000000000000";
+														O_AUDIO     <= "0000000000000000";
+														O_SoundStop <= "1111111111111110";
+												  end if;
+							-- sort rest
+							when others => null;
+						end case;
+					elsif (GAME = 3) then
+						-- Cosmic Alien
+						case address is
+							when 16#7000# => O_SoundPort(2) <= SoundBit;
+							when 16#7002# => 
+								case Bomb_Select is
+									when "010" => O_SoundStop(3) <= SoundBit;
+													  O_SoundPort(3) <= SoundBit;
+									when "011" => O_SoundStop(4) <= SoundBit;
+													  O_SoundPort(4) <= SoundBit;
+									when "100" => O_SoundStop(5) <= SoundBit;
+													  O_SoundPort(5) <= SoundBit;
+									when "101" => O_SoundStop(6) <= SoundBit;
+													  O_SoundPort(6) <= SoundBit;
+									when "110" => O_SoundStop(7) <= SoundBit;
+													  O_SoundPort(7) <= SoundBit;
+									when "111" => O_SoundStop(8) <= SoundBit;
+													  O_SoundPort(8) <= SoundBit;
+									when others => null;
+								end case;
+							when 16#7003# => Bomb_Select(2) <= cpu_data_out(7);
+							when 16#7004# => Bomb_Select(1) <= cpu_data_out(7);
+							when 16#7005# => Bomb_Select(0) <= cpu_data_out(7);
+							when 16#7006# => O_SoundPort(10) <= SoundBit;
+							when 16#7007# => O_SoundPort(11) <= SoundBit; -- swopped, was 12,11
+							when 16#7008# => O_SoundPort(12) <= SoundBit;
+							when 16#7009# => O_SoundPort(9) <= SoundBit;
+							when 16#700B# => Sound_EN <= cpu_data_out(7);
+												  if (cpu_data_out(7)='1') then
+														-- Start background noise
+														O_SoundPort(1) <= '1';
+												  elsif Sound_EN='1' then
+														-- Stop all sounds as well if turning off
+														O_SoundPort <= "0000000000000000";
+														O_AUDIO     <= "0000000000000000";
+														O_SoundStop <= "1111111111111110";
+												  end if;					
+							when others => null;
+						end case;
+					end if;
 				end if;
 			end if;
 		end if;
@@ -650,7 +653,7 @@ port map (
 	--
 	PIX_CLK	 => PIX_CLK,
 	CLK       => CLK,
-	CPU_CLK   => CPU_CLK,
+	CPU_ENA   => CPU_ENA,
 	GAME      => GAME
 );
 

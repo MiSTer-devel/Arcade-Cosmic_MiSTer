@@ -35,7 +35,7 @@ port (
 	O_BLUE            : out   std_logic_vector(3 downto 0);
 	PIX_CLK           : in    std_logic;
 	CLK		         : in    std_logic;
-	CPU_CLK	         : in    std_logic;
+	CPU_ENA	         : in    std_logic;
 	GAME              : in    std_logic_vector(7 downto 0)
 );
 end;
@@ -729,11 +729,11 @@ begin
 end process;
 
 -- Sprite register writes, store in arrays for ease of processing
-SPR_Write : process (CPU_CLK)
+SPR_Write : process (CLK)
 variable spr_no : integer;
 begin
-	if rising_edge(CPU_CLK) then
-		if I_SPR_WR ='1' then
+	if rising_edge(CLK) then
+		if (CPU_ENA='1' and I_SPR_WR ='1') then
 
 			spr_no := to_integer(unsigned(I_SPR_ADD(4 downto 2)));
 
