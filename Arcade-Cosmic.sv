@@ -483,7 +483,22 @@ pause #(4,4,4,2) pause (
 // reg [15:0] audio;
 assign AUDIO_L = samples_left;
 assign AUDIO_R = samples_right;
-wire   Myreset = RESET | ioctl_download | status[0] | buttons[1];
+wire   reset_req = RESET | ioctl_download | status[0] | buttons[1];
+reg 	 Myreset = 0;
+
+
+// If reset is triggered within the OSD, need to hold the
+// signal high until the OSD closes; otherwise, the audio
+// and video systems don't reset for Cosmic Alient
+always @(posedge clk_sys) begin
+	if(reset_req && !Myreset) begin
+		Myreset <= 1'b1;
+	end
+	if(!reset_req && !OSD_STATUS) begin
+		Myreset <= 1'b0;
+	end
+end
+
 
 COSMIC COSMIC
 (
