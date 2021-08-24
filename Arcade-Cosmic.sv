@@ -190,7 +190,8 @@ assign VGA_SCALER = 0;
 assign HDMI_FREEZE = 0;
 assign FB_FORCE_BLANK = 0;
 
-assign LED_USER  = ioctl_download;
+assign LED_USER  = 0;
+
 assign LED_DISK  = 0;
 assign LED_POWER = 0;
 
@@ -212,9 +213,13 @@ localparam CONF_STR = {
 	"-;",
 	"DIP;",
 	"-;",
+	"P1,Pause options;",
+	"P1OL,Pause when OSD is open,On,Off;",
+	"P1OM,Dim video after 10s,On,Off;",
+	"-;",
 	"R0,Reset;",
-	"J1,Fire 1,Fire 2,Start 1P,Start 2P,Coin;",
-	"jn,Start,Select,R;",
+	"J1,Fire 1,Fire 2,Start 1P,Start 2P,Coin,Pause;",
+	"jn,A,B,Start,Select,R,L;",
 	"V,v",`BUILD_DATE
 };
 
@@ -223,13 +228,13 @@ localparam CONF_STR = {
 wire pll_locked;
 wire clk_vid;
 wire clk_sys;
-
+    
 pll pll
 (
 	.refclk(CLK_50M),
 	.rst(0),
 	.outclk_0(clk_vid),			// 43.264 Mhz
-	.outclk_1(clk_sys), 			// 10.816 Mhz
+	.outclk_1(clk_sys),			// 10.816 Mhz
 	.locked(pll_locked)
 );
 
@@ -408,6 +413,8 @@ wire B2_D = joy2[2] | btn_down2;
 wire B2_L = joy2[1] | btn_left2;
 wire B2_R = joy2[0] | btn_right2;
 
+wire m_pause = joy1[9] | joy2[9];
+
 // Panic
 wire [7:0] Panic_P1 = {~B1_B2,2'd3,~B1_U,~B1_D,~B1_L,~B1_R,~B1_B1};
 wire [7:0] Panic_P2 = {~B2_B2,2'd3,~B2_U,~B2_D,~B2_L,~B2_R,~B2_B1};
@@ -447,7 +454,7 @@ arcade_video #(260,12) arcade_video
 	.clk_video(clk_vid),
 	.ce_pix(pix_clk),
 
-	.RGB_in({r,g,b}),
+	.RGB_in(rgb_out),
 	.HBlank(hblank),
 	.VBlank(vblank),
 	.HSync(hs),
@@ -456,7 +463,24 @@ arcade_video #(260,12) arcade_video
 	.fx(status[5:3])
 );
 
-reg [15:0] audio;
+// PAUSE SYSTEM
+wire pause_cpu;
+
+wire [11:0] rgb_out;
+
+// Clock speed is either 1.7 or 2.8MHz. The speed of the clock for
+// the pause system is just for how long to wait to dim the screen,
+// so it's fine just to set it to 2 always.
+pause #(4,4,4,2) pause (
+  .*,
+  .reset(Myreset),
+  .user_button(m_pause),
+  .pause_request(),
+  .options(~status[22:21])
+);
+
+
+// reg [15:0] audio;
 assign AUDIO_L = samples_left;
 assign AUDIO_R = samples_right;
 wire   Myreset = RESET | ioctl_download | status[0] | buttons[1];
@@ -496,7 +520,8 @@ COSMIC COSMIC
 	.PIX_CLK(pix_clk),
 	.CPU_ENA(cpu_ena),
 	.CLK(clk_sys),
-	.GAME(GameMod)
+	.GAME(GameMod),
+  .PAUSED(pause_cpu) 
 );
 
 ////////////////////////////  Samples   ///////////////////////////////////
@@ -550,7 +575,7 @@ samples samples
 	.dl_download(ioctl_download && (ioctl_index == 3)),
 	
 	.CLK_SYS(clk_sys),
-	.clock(clk_vid),
+	.clock(clk_vid & ~pause_cpu),
 	.reset(Myreset),
 	
 	.audio_in(audio),

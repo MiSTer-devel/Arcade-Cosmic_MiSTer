@@ -44,7 +44,8 @@ port
 	PIX_CLK    : in  std_logic;
 	CPU_ENA    : in  std_logic;
 	CLK        : in  std_logic;
-	GAME       : in  std_logic_vector(7 downto 0)
+	GAME       : in  std_logic_vector(7 downto 0);
+  PAUSED     : in  std_logic
 );
 end;
 
@@ -269,7 +270,7 @@ begin
 		RESET_n       => Global_Reset,
 		CLK_n         => CLK,
 		CEN           => CPU_ENA,
-		WAIT_n        => '1',
+		WAIT_n        => not PAUSED,
 		INT_n         => cpu_int_l,
 		NMI_n         => cpu_nmi_l,
 		BUSRQ_n       => '1',
@@ -654,7 +655,8 @@ port map (
 	PIX_CLK	 => PIX_CLK,
 	CLK       => CLK,
 	CPU_ENA   => CPU_ENA,
-	GAME      => GAME
+	GAME      => GAME,
+  PAUSED    => PAUSED
 );
 
 end RTL;
