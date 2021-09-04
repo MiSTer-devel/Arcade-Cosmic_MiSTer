@@ -36,7 +36,8 @@ port (
 	PIX_CLK           : in    std_logic;
 	CLK		         : in    std_logic;
 	CPU_ENA	         : in    std_logic;
-	GAME              : in    std_logic_vector(7 downto 0)
+	GAME              : in    std_logic_vector(7 downto 0);
+        PAUSED            : in    std_logic
 );
 end;
 
@@ -283,18 +284,20 @@ begin
 	 
     if (PIX_CLK = '1') then	
 
-		-- Frame counter (for background circuits)
-		if I_HCNT="011111100" then
-			if I_VCNT="011111111" then
-				frame <= frame + 1;
-				if I_FLIP='0' then
-					Riverframe <= frame;
-				else
-					Riverframe <= not frame;
+			if (PAUSED = '0') then
+				-- Frame counter (for background circuits)
+				if I_HCNT="011111100" then
+					if I_VCNT="011111111" then
+						frame <= frame + 1;
+						if I_FLIP='0' then
+							Riverframe <= frame;
+						else
+							Riverframe <= not frame;
+						end if;
+					else
+						Riverframe <= Riverframe + 1;
+					end if;
 				end if;
-			else
-				Riverframe <= Riverframe + 1;
-			end if;
 		end if;
 	 
 		--  if in visible area 

@@ -9,4 +9,5 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/Cosmic.vhd
 set_global_assignment -name VHDL_FILE rtl/Cosmic_video.vhd
 set_global_assignment -name VHDL_FILE rtl/samples.vhd
+set_global_assignment -name VERILOG_FILE rtl/pause.v
 set_global_assignment -name SYSTEMVERILOG_FILE "Arcade-Cosmic.sv"

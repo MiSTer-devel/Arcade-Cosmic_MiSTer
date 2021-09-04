@@ -6,11 +6,11 @@
 	<manufacturer>Universal</manufacturer>
 	<category>Space</category>
 	<rbf>cosmic</rbf>
-	<buttons names="Fire,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<buttons names="Fire,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="00,00,00">
 		<dip bits="0"     	name="Cabinet"     ids="Upright,Cocktail"/>
 		<dip bits="1"   	name="Lives"       ids="5,3"/>
-		<dip bits="2,3"		name="Coinage"	   ids="1C-1C,1C-2C,2C-1C"/>
+		<dip bits="2,3"		name="Coinage"	   ids="1 Coin 1 Credit,1 Coin 2 Credits,2 Coins 1 Credit"/>
 		<dip bits="4,5"   	name="Bonus life"  ids="None,15000,10000,5000"/>
 		<dip bits="16"    	name="Screen flip" ids="Off,On"/>
 	</switches>
