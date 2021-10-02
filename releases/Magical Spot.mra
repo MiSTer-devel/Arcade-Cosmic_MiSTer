@@ -10,14 +10,14 @@
 	<switches default="00,0F,00">
 		<dip bits="0,1"   	name="Bonus life"  ids="None,2000,3000,4000"/>
 		<dip bits="3,4"   	name="Lives"       ids="2,3,4,5"/>
-                <dip bits="5"     	name="Cabinet"     ids="Upright,Cocktail"/>
+		<dip bits="5"     	name="Cabinet"     ids="Upright,Cocktail"/>
 		<dip bits="8,11"	name="Coinage"	   ids="4 Coins 4 Credits,4 Coins 3 Credits,4 Coins 2 Credits,4 Coins 1 Credit,3 Coins 4 Credits,3 Coins 3 Credits,3 Coins 2 Credits,3 Coins 1 Credit,2 Coins 3 Credits,2 Coins 2 Credits,2 Coins 1 Credit,1 Coin 5 Credits,1 Coin 4 Credits,1 Coin 3 Credits,1 Coin 2 Credits,1 Coin 1 Credit"/>
 		<dip bits="16"    	name="Screen flip" ids="Off,On"/>
 	</switches>
 	<rom index="1">
 	    <part>02</part>
-	</rom>  
-    <rom index="3">
+	</rom>
+    <rom index="5">
          <!-- 00-coin.wav -->
          <!-- BGM.wav -->
          <!-- cocoon.wav -->
@@ -39,7 +39,7 @@
              12 31 08E2A8 0987A7
         </PART>
     </rom>
-    <rom index="4">
+    <rom index="6">
         <PART>
 0000E0FFE0FF2800000010002800D0FFE8FF1000C0FFF0FF0000C0FFF0FFF0FF
 D8FF40001000C8FF18000000E8FF0800D0FF00002800C0FFF8FF3000E8FF2800

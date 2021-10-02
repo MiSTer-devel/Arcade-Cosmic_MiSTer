@@ -174,7 +174,6 @@ module emu
 	input         OSD_STATUS
 );
 
-
 ///////// Default values for ports not used in this core /////////
 
 assign ADC_BUS  = 'Z;
@@ -213,6 +212,7 @@ localparam CONF_STR = {
 	"-;",
 	"DIP;",
 	"-;",
+	"H2ON,Autosave Hiscores,Off,On;",
 	"P1,Pause options;",
 	"P1OL,Pause when OSD is open,On,Off;",
 	"P1OM,Dim video after 10s,On,Off;",
@@ -274,9 +274,12 @@ wire        direct_video;
 wire [15:0] joy1, joy2;
 
 wire        ioctl_download;
+wire        ioctl_upload;
+wire        ioctl_upload_req;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
+wire  [7:0] ioctl_din;
 wire  [7:0] ioctl_dout;
 wire        ioctl_wait;
 
@@ -290,23 +293,26 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask({1'd0,direct_video}),
+	.status_menumask({~hs_configured,1'd0,direct_video}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 	.direct_video(direct_video),
 
 	.ioctl_download(ioctl_download),
+	.ioctl_upload(ioctl_upload),
+	.ioctl_upload_req(ioctl_upload_req),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_addr(ioctl_addr),
+	.ioctl_din(ioctl_din),
 	.ioctl_dout(ioctl_dout),
 	.ioctl_index(ioctl_index),
 	.ioctl_wait(ioctl_wait),
 
-   .sdram_sz(sdram_sz),	
+	.sdram_sz(sdram_sz),
 	
 	.joystick_0(joy1),
 	.joystick_1(joy2),
-   .ps2_key(ps2_key),
+	.ps2_key(ps2_key),
 	.ps2_mouse(ps2_mouse)
 );
 
@@ -465,17 +471,12 @@ arcade_video #(260,12) arcade_video
 
 // PAUSE SYSTEM
 wire pause_cpu;
-
 wire [11:0] rgb_out;
-
-// Clock speed is either 1.7 or 2.8MHz. The speed of the clock for
-// the pause system is just for how long to wait to dim the screen,
-// so it's fine just to set it to 2 always.
-pause #(4,4,4,2) pause (
+pause #(4,4,4,10) pause (
   .*,
   .reset(Myreset),
   .user_button(m_pause),
-  .pause_request(),
+  .pause_request(hs_pause),
   .options(~status[22:21])
 );
 
@@ -484,7 +485,7 @@ pause #(4,4,4,2) pause (
 assign AUDIO_L = samples_left;
 assign AUDIO_R = samples_right;
 wire   reset_req = RESET | ioctl_download | status[0] | buttons[1];
-reg 	 Myreset = 0;
+reg    Myreset = 0;
 
 
 // If reset is triggered within the OSD, need to hold the
@@ -536,12 +537,52 @@ COSMIC COSMIC
 	.CPU_ENA(cpu_ena),
 	.CLK(clk_sys),
 	.GAME(GameMod),
-  .PAUSED(pause_cpu) 
+	
+	.PAUSED(pause_cpu),
+	
+	.hs_address(hs_address),
+	.hs_data_out(hs_data_out),
+	.hs_data_in(hs_data_in),
+	.hs_write(hs_write_enable),
+	.hs_access(hs_access_read|hs_access_write)
+);
+
+// HISCORE SYSTEM
+// --------------
+
+wire [15:0] hs_address;
+wire [7:0] hs_data_in;
+wire [7:0] hs_data_out;
+wire hs_write_enable;
+wire hs_access_read;
+wire hs_access_write;
+wire hs_pause;
+wire hs_configured;
+
+hiscore #(
+	.HS_ADDRESSWIDTH(16),
+	.CFG_LENGTHWIDTH(2)
+) hi (
+	.*,
+	.clk(clk_sys),
+	.reset(Myreset),
+	.paused(pause_cpu),
+	.autosave(status[23]),
+	.ram_address(hs_address),
+	.data_from_ram(hs_data_out),
+	.data_to_ram(hs_data_in),
+	.data_from_hps(ioctl_dout),
+	.data_to_hps(ioctl_din),
+	.ram_write(hs_write_enable),
+	.ram_intent_read(hs_access_read),
+	.ram_intent_write(hs_access_write),
+	.pause_cpu(hs_pause),
+	.configured(hs_configured)
 );
 
 ////////////////////////////  Samples   ///////////////////////////////////
 
-//wire		wav_load = ioctl_download && (ioctl_index == 4);
+wire		wav_download = ioctl_download && (ioctl_index == 8'd6);
 reg  [24:0] wav_addr;
 wire [15:0] wav_data;
 reg         wav_want_byte;
@@ -561,7 +602,7 @@ reg         Sound_Enable;
 		.clk(clk_vid),
 
 		.addr(ioctl_download ? ioctl_addr : {wav_addr[24:1],1'd0}),
-		.we(ioctl_download && ioctl_wr && (ioctl_index==4)),
+		.we(wav_download && ioctl_wr),
 		.rd(~ioctl_download & wav_want_byte),
 		.din(ioctl_dout),
 		.dout(wav_data),
@@ -571,6 +612,7 @@ reg         Sound_Enable;
 	
 // Link to Samples module
 
+wire		samples_download = ioctl_download && (ioctl_index == 8'd5);
 samples samples
 (
 	.audio_enabled(1'd1),
@@ -587,7 +629,7 @@ samples samples
 	.dl_addr(ioctl_addr),
 	.dl_wr(ioctl_wr),
 	.dl_data(ioctl_dout),
-	.dl_download(ioctl_download && (ioctl_index == 3)),
+	.dl_download(samples_download),
 	
 	.CLK_SYS(clk_sys),
 	.clock(clk_vid & ~pause_cpu),
