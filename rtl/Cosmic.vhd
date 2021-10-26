@@ -45,7 +45,14 @@ port
 	CPU_ENA    : in  std_logic;
 	CLK        : in  std_logic;
 	GAME       : in  std_logic_vector(7 downto 0);
-  PAUSED     : in  std_logic
+	PAUSED     : in  std_logic;
+
+-- HISCORE
+	hs_address  : in  std_logic_vector(15 downto 0);
+	hs_data_out : out std_logic_vector(7 downto 0);
+	hs_data_in  : in  std_logic_vector(7 downto 0);
+	hs_write    : in  std_logic;
+	hs_access   : in  std_logic
 );
 end;
 
@@ -125,6 +132,13 @@ architecture RTL of cosmic is
 	-- Sound
 	signal Sound_EN		   : std_logic := '0';
 	signal Bomb_Select	   : std_logic_vector(2 downto 0);
+	
+	-- Hiscore system
+	signal vid_a_addr			: std_logic_vector(12 downto 0);
+	signal vid_a_q				: std_logic_vector(7 downto 0);
+	signal vid_a_data			: std_logic_vector(7 downto 0);
+	signal vid_a_wren			: std_logic;
+	signal vid_a_en			: std_logic;
 
 begin
 
@@ -425,17 +439,26 @@ end process;
 	  clock    => clk
    );
 
+
+ -- hiscore mux into video ram port
+vid_a_addr <= hs_address(12 downto 0) when hs_access = '1' else cpu_addr(12 downto 0);
+vid_a_data <= hs_data_in when hs_access = '1' else cpu_data_out;
+hs_data_out <= vid_a_q when hs_access = '1' else "00000000";
+vid_data <= vid_a_q when hs_access = '0' else "00000000";
+vid_a_en <= '1' when hs_access = '1' else (vid_wr or vid_rd);
+vid_a_wren <= hs_write when hs_access = '1' else vid_wr;
+
  -- program and video ram
  video_ram : entity work.dpram
 	 generic map (
 	  addr_width => 13
 	 )
 	 port map (
-	  q_a        => vid_data,
-	  data_a     => cpu_data_out,
-	  address_a  => cpu_addr(12 downto 0),
-	  wren_a     => vid_wr,
-	  enable_a   => vid_wr or vid_rd,
+	  q_a        => vid_a_q,
+	  data_a     => vid_a_data,
+	  address_a  => vid_a_addr,
+	  wren_a     => vid_a_wren,
+	  enable_a   => vid_a_en,
 	  clock      => clk,
 	  
 	  address_b  => vid_addr(12 downto 0),

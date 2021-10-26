@@ -11,13 +11,13 @@
 		<dip bits="0,2"   name="Coinage"     ids="1 Coin 1 Credit, 1 Coin 2 Credits, 1 Coin 3 Credits, 1 Coin 4 Credits, 1 Coin 5 Credits, 2 Coins 3 Credits"/>
 		<dip bits="3"     name="Cabinet"     ids="Upright,Cocktail"/>
 		<dip bits="4"     name="Bonus life"  ids="3000,5000"/>
-                <dip bits="5"     name="Lives"       ids="3,4"/>
+		<dip bits="5"     name="Lives"       ids="3,4"/>
 		<dip bits="16"    name="Screen flip" ids="Off,On"/>
 	</switches>
 	<rom index="1">
-	    <part>01</part>
-	</rom>  
-    <rom index="3">
+		<part>01</part>
+	</rom>
+	<rom index="5">
          <!-- coin.wav -->
          <!-- death.wav -->
          <!-- ekilled.wav -->
@@ -43,7 +43,7 @@
              14 31 14FA74 1519DB
         </PART>
     </rom>
-    <rom index="4">
+    <rom index="6">
         <PART>
 2D6E7C67656CC9697A6A416BEA657E6AB05FD06F0A1C268C9190A98C468FE18C
 688F849043934692D99EE93CDD72B565D46CA267A56B7467B567D8656264D35D
