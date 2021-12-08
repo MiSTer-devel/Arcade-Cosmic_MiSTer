@@ -451,6 +451,7 @@ assign { voffset, hoffset } = status[31:24];
 
 wire no_rotate = status[2] | direct_video;
 wire rotate_ccw = 1;
+wire flip = 0; // new
 screen_rotate screen_rotate (.*);
 
 arcade_video #(260,12) arcade_video
@@ -481,7 +482,7 @@ pause #(4,4,4,10) pause (
 );
 
 
-// reg [15:0] audio;
+reg [15:0] audio;
 assign AUDIO_L = samples_left;
 assign AUDIO_R = samples_right;
 wire   reset_req = RESET | ioctl_download | status[0] | buttons[1];
@@ -534,7 +535,7 @@ COSMIC COSMIC
 	
 	.RESET(Myreset),
 	.PIX_CLK(pix_clk),
-	.CPU_ENA(cpu_ena),
+	.CPU_ENA(cpu_ena & ~pause_cpu),
 	.CLK(clk_sys),
 	.GAME(GameMod),
 	
