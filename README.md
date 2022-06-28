@@ -2,6 +2,7 @@
 
 By [Mike Coates](https://github.com/macrofpga)  
 Current Version - 0.90 - 08/07/2021
+
                   0.95 - 28/06/2022 - Add Devil Zone
 
 ## Description
