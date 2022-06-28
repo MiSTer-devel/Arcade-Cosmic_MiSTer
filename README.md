@@ -1,7 +1,8 @@
 # [Arcade: Universal Cosmic](https://www.arcade-museum.com/game_detail.php?game_id=7398) games (Z80-based) for [MiSTer](https://github.com/MiSTer-devel/Main_MiSTer/wiki)
 
 By [Mike Coates](https://github.com/macrofpga)  
-Current Version - 0.9 - 08/07/2021
+Current Version - 0.90 - 08/07/2021
+                  0.95 - 28/06/2022 - Add Devil Zone
 
 ## Description
 
@@ -16,6 +17,7 @@ Up, Down, Left, Right, Fire 1, Fire 2 (not all games use all buttons)
 ## Games currently supported
 
 * [Cosmic Alien](https://www.arcade-museum.com/game_detail.php?game_id=7398)
+* [Devil Zone](https://www.arcade-museum.com/game_detail.php?game_id=7576)
 * [Magical Spot](https://www.arcade-museum.com/game_detail.php?game_id=8505)
 * [Space Panic](https://www.arcade-museum.com/game_detail.php?game_id=9676)
 
@@ -27,7 +29,7 @@ I have added a screen flip option to the sprite code, sprites are flipped by the
 
 No Man's Land needs the background video lined up properly in all flip modes.
 
-Devil Zone and No Man's Land need sound samples sourced and connected up.
+No Man's Land need sound samples sourced and connected up.
 
 ## Hiscore save/load
 

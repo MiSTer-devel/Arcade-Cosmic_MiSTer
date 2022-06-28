@@ -392,7 +392,7 @@ begin
 						when 16#7800# to 16#7801# => snd_wr <= '1';
 						when others => null;
 					end case;
-				when x"02" | x"04"| x"05" => -- Magical Spot, Devil Zone, No Mans Land
+				when x"02" | x"04" | x"05" => -- Magical Spot, Devil Zone, No Mans Land
 					case address is
 						when 16#6000# to 16#7FFF# => vid_wr <= '1';
 						when 16#4000# to 16#401F# => spr_wr <= '1';
@@ -565,7 +565,7 @@ begin
 							when 16#7801# => O_SoundPort(3) <= SoundBit;
 							when others => null;
 						end case;
-					elsif (GAME = 2 or GAME = 4 or GAME = 5) then
+					elsif (GAME = 2 or GAME = 5) then
 						-- Magic Spot sound registers
 						case address is
 							when 16#4800# => O_AUDIO <= "00" & cpu_data_out(7) & "0000000000000"; -- 1 bit DAC
@@ -625,6 +625,27 @@ begin
 														O_AUDIO     <= "0000000000000000";
 														O_SoundStop <= "1111111111111110";
 												  end if;					
+							when others => null;
+						end case;
+					elsif (GAME = 4) then
+						-- Devil Zone sound registers
+						case address is
+							when 16#4800# => O_AUDIO <= "00" & cpu_data_out(7) & "0000000000000"; -- 1 bit DAC
+							when 16#4801# => O_SoundPort(1) <= SoundBit; -- High Score
+							when 16#4803# => O_SoundPort(2) <= SoundBit; -- Explosion
+							when 16#4804# => O_SoundPort(3) <= SoundBit; -- Fire
+							when 16#4805# => O_SoundPort(4) <= SoundBit; -- Hit						
+							when 16#4806# => O_SoundPort(5) <= SoundBit; -- Holding noise
+							when 16#4809# => O_SoundPort(6) <= SoundBit; -- Swoop
+							when 16#480A# => O_SoundPort(7) <= SoundBit; -- Appear
+							when 16#480B# => Sound_EN <= cpu_data_out(7);
+												  if (cpu_data_out(7)='0' and Sound_EN='1') then
+														-- Stop all sounds as well if turning off
+														O_SoundPort <= "0000000000000000";
+														O_AUDIO     <= "0000000000000000";
+														O_SoundStop <= "1111111111111110";
+												  end if;
+							-- sort rest
 							when others => null;
 						end case;
 					end if;

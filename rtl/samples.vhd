@@ -63,6 +63,7 @@ architecture struct of samples is
  signal next_ports     : std_logic_vector(15 downto 0); 
  signal this_stop      : std_logic_vector(15 downto 0); 
  signal next_stop      : std_logic_vector(15 downto 0); 
+ signal next_audio_in  : std_logic_vector(15 downto 0); 
  
  -- Audio variables
  signal audio_sum_l    : signed(19 downto 0);
@@ -155,6 +156,9 @@ begin
 				next_ports <= next_ports or ports;
 				next_stop  <= next_stop or audio_stop;
 				
+				-- Devil Zone only sets this for a few cycles, so it needs to be kept until the next active audio cycle
+				next_audio_in <= next_audio_in or audio_in;
+				
 				if snd_id <= 15 then
 					if snd_addr_play(snd_id)=x"FFFFFF" then
 						-- All Start play on 0 to 1 transition
@@ -196,8 +200,10 @@ begin
 					-- latch final audio / reset sum
 					audio_r <= audio_sum_r;
 					audio_l <= audio_sum_l;
-					audio_sum_r <= resize(signed(audio_in), 20);
-					audio_sum_l <= resize(signed(audio_in), 20);
+					audio_sum_r <= resize(signed(next_audio_in), 20);
+					audio_sum_l <= resize(signed(next_audio_in), 20);
+					
+					next_audio_in <= audio_in;
 				else
 					wav_clk_cnt <= wav_clk_cnt + 1;
 				end if;

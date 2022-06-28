@@ -2,7 +2,8 @@
 -- 
 -- Universal Cosmic games (Z80 based) for MiSTer - Mike Coates
 --
--- V 0.9 - 08/07/2021 - Mike Coates
+-- V 0.90 - 08/07/2021 - Mike Coates
+-- V 0.95 - 28/06/2022 - Mike Coates - Add Devil Zone
 ---------------------------------------------------------------------------------
 --
 -- Up, Down, Left, Right, Fire 1, Fire 2 (not all games use all buttons) 
@@ -26,7 +27,7 @@ implemented as a fake dip switch.
 
 No mans land needs the background video lined up properly in all flip modes.
 
-Devil Zone and No Mans Land need sound samples sourcing and connecting up.
+No Mans Land need sound samples sourcing and connecting up.
 
 ---------------------------------------------------------------------------------
 

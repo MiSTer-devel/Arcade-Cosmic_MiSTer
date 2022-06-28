@@ -30,7 +30,7 @@ module emu
 	input         RESET,
 
 	//Must be passed to hps_io module
-	inout  [47:0] HPS_BUS,
+	inout  [48:0] HPS_BUS,
 
 	//Base video clock. Usually equals to CLK_SYS.
 	output        CLK_VIDEO,
@@ -451,8 +451,13 @@ assign { voffset, hoffset } = status[31:24];
 
 wire no_rotate = status[2] | direct_video;
 wire rotate_ccw = 1;
-wire flip = 0; // new
-screen_rotate screen_rotate (.*);
+wire flip = 0;
+
+screen_rotate screen_rotate 
+(
+	.*,
+	.video_rotated()
+);
 
 arcade_video #(260,12) arcade_video
 (
@@ -535,7 +540,7 @@ COSMIC COSMIC
 	
 	.RESET(Myreset),
 	.PIX_CLK(pix_clk),
-	.CPU_ENA(cpu_ena & ~pause_cpu),
+	.CPU_ENA(cpu_ena),
 	.CLK(clk_sys),
 	.GAME(GameMod),
 	
