@@ -6,6 +6,7 @@
 	<manufacturer>Universal</manufacturer>
 	<category>Space</category>
 	<rbf>cosmic</rbf>
+	<buttons names="Fire,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="01,00,00">
 		<dip bits="0,1"   	name="Bonus life"  ids="None,4000,6000,8000"/>
 		<dip bits="2,3"		name="Coinage"	   ids="1C-1C,2C-1C,1C-2C,4C-4C"/>

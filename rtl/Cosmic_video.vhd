@@ -526,13 +526,25 @@ begin
 
 			if (I_VCNT(8)='1' and (I_HCNT(8)='1' or I_HCNT="011111110"or I_HCNT="011111111")) then
 
-				-- Get corrected Horizontal and Vertical counters (H in 2 pixels time)
-				if I_FLIP='0' then
-					X1 := "0000000010" + unsigned(I_HCNT(7 downto 0));
-					X2(8 downto 0) := unsigned(I_VCNT);
+				-- Hardware flip needs offset each mode (real hardware doesn't have it, just cocktail flip)
+				if I_H_FLIP='0' then
+					-- Get corrected Horizontal and Vertical counters (H in 2 pixels time)
+					if I_S_FLIP='0' then
+						X1 := "0000000010" + unsigned(I_HCNT(7 downto 0));
+						X2(8 downto 0) := unsigned(I_VCNT);
+					else
+						X1 := 511 - ("0000000000" + unsigned(I_HCNT(7 downto 0)));
+						X2(8 downto 0) := 511 - unsigned(I_VCNT);
+					end if;
 				else
-					X1 := 511 - ("0000000010" + unsigned(I_HCNT(7 downto 0)));
-					X2(8 downto 0) := 511 - unsigned(I_VCNT);
+					-- Hardware Flip On - so software flip does the opposite
+					if I_S_FLIP='1' then
+						X1 := "0000000010" + unsigned(I_HCNT(7 downto 0)) + 2;
+						X2(8 downto 0) := unsigned(I_VCNT);
+					else
+						X1 := 511 - ("0000000010" + unsigned(I_HCNT(7 downto 0)));
+						X2(8 downto 0) := 511 - unsigned(I_VCNT);
+					end if;
 				end if;
 				
 
@@ -551,7 +563,7 @@ begin
 					-- Water
 					if X1(7 downto 4)="1010" then
 					
-						op_addr <= "01" & std_logic_vector(Riverframe) & X1(7);
+						op_addr <= "01" & std_logic_vector(Riverframe) & X1(3);
 						River   <= '1' & std_logic_vector(X1(2 downto 0));
 						
 					end if;
@@ -574,7 +586,7 @@ begin
 				
 					if plane1='1' and plane2='1' then back_red <= "1111"; end if;
 					if plane1='1' or Plane2='1' then back_green <= "1111"; end if;
-					if plane1='0' then back_blue <= "1111"; end if;
+					if plane1='0' and op_addr(0)='1' then back_blue <= "1111"; end if;
 					
 				end if;
 				

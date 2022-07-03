@@ -2,8 +2,7 @@
 -- 
 -- Universal Cosmic games (Z80 based) for MiSTer - Mike Coates
 --
--- V 0.90 - 08/07/2021 - Mike Coates
--- V 0.95 - 28/06/2022 - Mike Coates - Add Devil Zone
+-- V 1.00 - 03/07/2022 - Mike Coates
 ---------------------------------------------------------------------------------
 --
 -- Up, Down, Left, Right, Fire 1, Fire 2 (not all games use all buttons) 
@@ -19,15 +18,11 @@ necessarily identical to the real thing, but achieves the same end result.
 
 Known differences / problems
 
-Sound effects are all implemented using samples (other than the DAC)
+Sound effects are implemented using samples (other than the DAC)
 
 I have added a screen flip option to the sprite code, sprites are flipped by the 
 software on the real hardware, but everything else does have a flip signal. It is 
 implemented as a fake dip switch.
-
-No mans land needs the background video lined up properly in all flip modes.
-
-No Mans Land need sound samples sourcing and connecting up.
 
 ---------------------------------------------------------------------------------
 

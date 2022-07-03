@@ -281,7 +281,7 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_din;
 wire  [7:0] ioctl_dout;
-wire        ioctl_wait;
+wire        ioctl_wait = 0;
 
 wire [21:0] gamma_bus;
 wire [15:0] sdram_sz;
@@ -425,19 +425,25 @@ wire m_pause = joy1[9] | joy2[9];
 wire [7:0] Panic_P1 = {~B1_B2,2'd3,~B1_U,~B1_D,~B1_L,~B1_R,~B1_B1};
 wire [7:0] Panic_P2 = {~B2_B2,2'd3,~B2_U,~B2_D,~B2_L,~B2_R,~B2_B1};
 wire [7:0] Panic_P3 = {1'd1,~B1_C,4'D15,~B2_S,~B1_S};
+
 // Magical Spot
 wire [7:0] MagSpot_P1 = {sw[1][7:6],~B1_R,3'd7,~B1_L,1'd1}; // Includes bonus dips
 wire [7:0] MagSpot_P2 = {2'd3,~B2_R,3'd7,~B2_L,1'd1};
 wire [7:0] MagSpot_P3 = {~B1_B1,~B2_B1,5'D31,~vblank};
 wire [7:0] MagSpot_P4 = {~B1_S,~B2_S,sw[0][5:0]};
+
 // Cosmic Alien
 wire [7:0] Alien_P1 = {5'd31,~B1_L,~B1_R,~B1_B1};
 wire [7:0] Alien_P2 = {5'd31,~B2_L,~B2_R,~B2_B1};
 wire [7:0] Alien_P3 = {2'd0,VCount[7:2]};
 
+// No Mans Land
+wire [7:0] NML_P1 = B1_B1 ? 8'hFF : (B1_U && B1_L) ? 8'hFE : (B1_D && B1_L) ? 8'hFB : (B1_D && B1_R) ? 8'hEF : (B1_U && B1_R) ? 8'hBF : {~B1_U,1'd1,~B1_R,1'd1,~B1_D,1'd1,~B1_L,1'd1};
+wire [7:0] NML_P2 = B2_B1 ? 8'hFF : (B2_U && B2_L) ? 8'hFE : (B2_D && B2_L) ? 8'hFB : (B2_D && B2_R) ? 8'hEF : (B2_U && B2_R) ? 8'hBF : {~B2_U,1'd1,~B2_R,1'd1,~B2_D,1'd1,~B2_L,1'd1};
+
 // Select correct inputs
-wire [7:0] IN0 = (GameMod==1)? Panic_P1 : (GameMod==2 || GameMod==4 || GameMod==5)? MagSpot_P1 : Alien_P1;
-wire [7:0] IN1 = (GameMod==1)? Panic_P2 : (GameMod==2 || GameMod==4 || GameMod==5)? MagSpot_P2 : Alien_P2;
+wire [7:0] IN0 = (GameMod==1)? Panic_P1 : (GameMod==2 || GameMod==4) ? MagSpot_P1 : (GameMod==5) ? NML_P1 : Alien_P1;
+wire [7:0] IN1 = (GameMod==1)? Panic_P2 : (GameMod==2 || GameMod==4) ? MagSpot_P2 : (GameMod==5) ? NML_P2 : Alien_P2;
 wire [7:0] IN2 = (GameMod==1)? Panic_P3 : (GameMod==2 || GameMod==4 || GameMod==5)? MagSpot_P3 : Alien_P3;
 wire [7:0] DIP = (GameMod==1)? sw[0] : MagSpot_P4; 
 
@@ -492,7 +498,7 @@ assign AUDIO_L = samples_left;
 assign AUDIO_R = samples_right;
 wire   reset_req = RESET | ioctl_download | status[0] | buttons[1];
 reg    Myreset = 0;
-
+reg [1:0] BackSpeed;
 
 // If reset is triggered within the OSD, need to hold the
 // signal high until the OSD closes; otherwise, the audio
@@ -530,6 +536,7 @@ COSMIC COSMIC
 	.O_SoundStop(SoundStop),
 	.O_AUDIO(audio),
 	.O_Sound_EN(),
+	.O_NML_Speed(BackSpeed),
 
 	.dipsw1(DIP),
 	.dipsw2(sw[1]),
@@ -636,6 +643,8 @@ samples samples
 	.dl_wr(ioctl_wr),
 	.dl_data(ioctl_dout),
 	.dl_download(samples_download),
+	
+	.NML_Speed(BackSpeed),
 	
 	.CLK_SYS(clk_sys),
 	.clock(clk_vid & ~pause_cpu),
