@@ -64,8 +64,13 @@ signal op_ad2			: std_logic_vector(10 downto 0);
 signal op_addr			: std_logic_vector(10 downto 0);
 
 -- Sprites
-type LBA is array (0 to 1,0 to 255) of std_logic_vector(2 downto 0);
-signal linebuffer 	: LBA;
+signal linebuffer_wraddr  : std_logic_vector(8 downto 0);
+signal linebuffer_wr      : std_logic;
+signal linebuffer_wr_data : std_logic_vector(2 downto 0);
+
+signal linebuffer_clr     : std_logic;
+signal linebuffer_rdaddr  : std_logic_vector(8 downto 0);
+signal SP                 : std_logic_vector(2 downto 0);
 
 type SA is array (0 to 7) of std_logic_vector(7 downto 0);
 signal Sprite_N      : SA;
@@ -172,7 +177,25 @@ begin
 	  address_b => op_ad2,
 	  q_b       => op_pix2
    );
-	
+
+	linebuffer : entity work.dpram
+	generic map (
+		addr_width => 9,
+		data_width => 3
+	)
+	port map (
+		q_a       => SP,
+		data_a    => "000",
+		address_a => linebuffer_rdaddr,
+		wren_a    => linebuffer_clr,
+		clock     => not CLK,
+
+		address_b => linebuffer_wraddr,
+		data_b    => linebuffer_wr_data,
+		wren_b    => linebuffer_wr,
+		q_b       => open
+	);
+
 -- Load pallette array
 pallette : process
 variable Entry, Color : integer;
@@ -612,12 +635,20 @@ end process;
 -- hardware supports 8 sprites in 16x16 or 32x32
 sprite_draw : process
 	variable V_OFF,H_OFF : integer;
-	variable SP : std_logic_vector(2 downto 0);
 	variable pixel : std_logic_vector(1 downto 0);
 	variable Entry : integer;
 	variable Color : integer;
 begin
    wait until rising_edge(CLK);
+
+   linebuffer_wr <= '0';
+   linebuffer_clr <= '0';
+   if I_H_FLIP='0' then
+      H_OFF := to_integer(unsigned(I_HCNT(7 downto 0))) + 1;
+   else
+      H_OFF := 254-to_integer(unsigned(I_HCNT(7 downto 0))); -- Was 255
+   end if;
+   linebuffer_rdaddr <= std_logic_vector((not sprite_buffer)&""&to_unsigned(H_OFF,8));
 
    if (PIX_CLK = '1') then	
 	
@@ -710,33 +741,18 @@ begin
 				Entry := to_integer(unsigned(not Sprite_C(sprite)(2 downto 0)));
 				Color := to_integer(unsigned(pixel));
 
-				if (sprite_buffer='0') then
-					linebuffer(0,sprite_pos) <= Colour_P(Entry,Color)(2 downto 0);
-				else
-					linebuffer(1,sprite_pos) <= Colour_P(Entry,Color)(2 downto 0);
-				end if;
+				linebuffer_wraddr <= std_logic_vector(sprite_buffer&""&to_unsigned(sprite_pos,8));
+				linebuffer_wr_data <= Colour_P(Entry,Color)(2 downto 0);
+				linebuffer_wr <= '1';
 			end if;
 		end if;
 
 		-- Read and clear other buffer for drawing
 		if (I_HCNT(8)='1' or I_HCNT = "011111111") then
-			if I_H_FLIP='0' then
-				H_OFF := to_integer(unsigned(I_HCNT(7 downto 0))) + 1;
-			else
-				H_OFF := 254-to_integer(unsigned(I_HCNT(7 downto 0))); -- Was 255
-			end if;
-		
-			if (sprite_buffer='0') then
-				SP := linebuffer(1,H_OFF);
-				linebuffer(1,H_OFF) <= "000";
-			else
-				SP := linebuffer(0,H_OFF);
-				linebuffer(0,H_OFF) <= "000";
-			end if;
-			
-		   sprite_blue  <= SP(2) & SP(2) & SP(2) & SP(2);
+			sprite_blue  <= SP(2) & SP(2) & SP(2) & SP(2);
 			sprite_green <= SP(1) & SP(1) & SP(1) & SP(1);
 			sprite_red   <= SP(0) & SP(0) & SP(0) & SP(0);
+			linebuffer_clr <= '1';
 		end if;
 
 	end if;
