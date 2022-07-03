@@ -27,10 +27,6 @@ Sound effects are all implemented using samples (other than the DAC).
 
 I have added a screen flip option to the sprite code, sprites are flipped by the software on the real hardware, but everything else does have a flip signal. It is implemented as a fake dip switch.
 
-No Man's Land needs the background video lined up properly in all flip modes.
-
-No Man's Land need sound samples sourced and connected up.
-
 ## Hiscore save/load
 
 Save and load of hiscores is supported for Cosmic Alien only.
