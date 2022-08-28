@@ -5,6 +5,8 @@
 	<year>1981</year>
 	<manufacturer>Universal</manufacturer>
 	<category>Space</category>
+	<parent>devzone</parent>
+	<setname>devzone</setname>
 	<rbf>cosmic</rbf>
 	<buttons names="Fire,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="01,00,00">
@@ -16,7 +18,7 @@
 	</switches>
 	<rom index="1">
 	    <part>04</part>
-	</rom>  
+	</rom>
     <rom index="5">
          <!-- 00-coin.wav -->
          <!-- 01-extra.wav -->

@@ -5,6 +5,8 @@
 	<year>1981</year>
 	<manufacturer>Universal</manufacturer>
 	<category>Garden</category>
+	<parent>magspot</parent>
+	<setname>magspot</setname>
 	<rbf>cosmic</rbf>
 	<buttons names="Fire,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="00,0F,00">

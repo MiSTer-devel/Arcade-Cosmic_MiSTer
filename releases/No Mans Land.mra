@@ -5,6 +5,8 @@
 	<year>1981</year>
 	<manufacturer>Universal</manufacturer>
 	<category>War</category>
+	<parent>nomnlnd</parent>
+	<setname>nomnlnd</setname>
 	<rbf>cosmic</rbf>
 	<buttons names="Fire,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="00,00,00">
@@ -16,7 +18,7 @@
 	</switches>
 	<rom index="1">
 	    <part>05</part>
-	</rom>  
+	</rom>
 	<rom index="0" zip="nomnlnd.zip" md5="none" type="nonmerged">
 		<part crc="ba117ba6" name="1.bin"/>
 		<part crc="e5ed654f" name="2.bin"/>
