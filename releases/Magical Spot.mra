@@ -1,10 +1,12 @@
 <misterromdescription>
 	<name>Magical Spot</name>
 	<mameversion>0219</mameversion>
-	<mratimestamp>202105170000</mratimestamp>
+	<mratimestamp>202212110000</mratimestamp>
 	<year>1981</year>
 	<manufacturer>Universal</manufacturer>
 	<category>Garden</category>
+    <setname>magspot</setname>
+    <rotation>vertical (ccw)</rotation>
 	<rbf>cosmic</rbf>
 	<buttons names="Fire,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="00,0F,00">

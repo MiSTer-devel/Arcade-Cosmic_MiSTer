@@ -1,10 +1,12 @@
 <misterromdescription>
 	<name>Space Panic</name>
 	<mameversion>0219</mameversion>
-	<mratimestamp>202105170000</mratimestamp>
+	<mratimestamp>202212110000</mratimestamp>
 	<year>1981</year>
 	<manufacturer>Universal</manufacturer>
 	<category>Platform</category>
+    <setname>panic</setname>
+    <rotation>vertical (ccw)</rotation>
 	<rbf>cosmic</rbf>
 	<buttons names="Dig,Fill,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L"/>
 	<switches default="00,00,00">
